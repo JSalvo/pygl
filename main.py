@@ -14,6 +14,8 @@ from OpenGL import GLUT
 import math
 from PyQt4 import Qt
 
+Key_Tab = int("0x01000001", 16)
+
 
 def paint_circle(x=0, y=0, radius=1, detail=12):
 	delta = (2*math.pi) / detail
@@ -104,6 +106,23 @@ class Entity:
 		glPopMatrix()
 
 
+class Scene:
+	def __init__(self):
+		self.entities = []
+	def add_entity(self, entity):
+		self.entities.append(entity)
+	def get_selected(self, x, y):
+		selected = None
+		for e in self.entities:
+			selected = e.get_selected(x, y)
+			if selected != None:
+				break
+		return selected
+	def paint(self):
+		for entity in self.entities:
+			entity.paint()
+
+
 class Attribute:
 	def __init__(self, name, x=0, y=0):
 		self.__label = Text(name, 20, 0)
@@ -128,12 +147,56 @@ class GLWidget(QGLWidget):
 		self._pan_x = 0
 		self._pan_y = 0
 		self.e = Entity("Cliente")
+		self.scene = Scene()
+		self.scene.add_entity(self.e)
+
+		self._mid_down_x = None
+		self._mid_down_y = None
+
+		self._mid_up_x = None
+		self._mid_up_y = None
+
+
+		self._left_down_x = None
+		self._left_down_y = None
+
+		self._left_up_x = None
+		self._left_up_y = None
+
+		self._last_mid_down_x = None
+		self._last_mid_down_y = None
+
+
+		self._tab_down = False
+
+		self._selected_object = None
 
 	def panY(self, pan_y):
 		self._pan_y += pan_y
+		self.refresh()
+
 
 	def panX(self, pan_x):
 		self._pan_x += pan_x
+		self.refresh()
+
+
+	def panXY(self, pan_x, pan_y):
+		self._pan_y += pan_y
+		self._pan_x += pan_x
+		self.refresh()
+
+	def add_zoom(self, value):
+		self._zoom_factor += value
+
+		if self._zoom_factor < 1:
+			self._zoom_factor = 1
+		self.refresh()
+
+
+	def refresh(self):
+		self.initializeGL()
+		self.updateGL()
 
 	def initializeGL(self):
 		GLUT.glutInit([], [])
@@ -149,51 +212,12 @@ class GLWidget(QGLWidget):
 		glOrtho(0.0 - self._pan_x * self._zoom_factor, self.width()*self._zoom_factor - self._pan_x * self._zoom_factor , 0.0 + self._pan_y * self._zoom_factor, self.height()*self._zoom_factor + self._pan_y * self._zoom_factor, -1.0, 1.0)
 
 	def paintGL(self):
-
 		glClear(GL_COLOR_BUFFER_BIT);
 		glColor3f(1.0, 1.0, 0.0)
 
-		"""
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-		glEnable(GL_BLEND)
-		glEnable(GL_LINE_SMOOTH)
-		glLineWidth(2.0)
-		"""
-
-
-		self.e.paint()
+		self.scene.paint()
 
 		#paint_circle(30, 30, 20, 12)
-
-		"""
-		a = Text("Ciao Bello")
-		a.x = 100
-		a.y = 100
-		a.paint()
-		"""
-
-		"""
-		glPushMatrix()
-		for i in range(33, 50):
-		GLUT.glutStrokeCharacter(GLUT.GLUT_STROKE_ROMAN, i)
-		glPopMatrix()
-		"""
-
-		"""
-		glBegin(GL_POLYGON)
-		glVertex3f(25, 25, 0.0)
-		glVertex3f(75, 25, 0.0)
-		glVertex3f(75, 75, 0.0)
-		glVertex3f(25, 75, 0.0)
-		glEnd()
-
-		glBegin(GL_LINES)
-		glVertex3f(0.0, 0.0, 0.0)
-		glVertex3f(self.width()-1, 0.0, 0.0)
-		glVertex3f(self.width()-1, self.height()-1, 0.0)
-		glVertex3f(0.0, self.height()-1, 0.0)
-		glEnd()
-		"""
 
 		glFlush()
 
@@ -202,6 +226,95 @@ class GLWidget(QGLWidget):
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 		glOrtho(0.0 - self._pan_x * self._zoom_factor, self.width()*self._zoom_factor - self._pan_x * self._zoom_factor, 0.0 + self._pan_y * self._zoom_factor, self.height()*self._zoom_factor + self._pan_y * self._zoom_factor, -1.0, 1.0)
+
+	def midDownDetected(self, x, y):
+		self._mid_down_x = x
+		self._mid_down_y = y
+		self._mid_up_x = None
+		self._mid_up_y = None
+
+	def print_click(self, x, y):
+		print "x: %d, y: %d"%self.xy_from_screen_to_model(x, y)
+
+	# Converte le coordinate "schermo" x, y in coordinate "modello"
+	def xy_from_screen_to_model(self, x, y):
+		y = self.height() - y
+		return ((x - self._pan_x)* self._zoom_factor, (y + self._pan_y) * self._zoom_factor)
+
+
+	def mouseMoveDetected(self, x, y):
+		if self._tab_down:
+			if self._mid_down_x != None and self._mid_down_y != None:
+
+				#print "Fai un pan"
+				delta_x = x - self._mid_down_x
+				delta_y = y - self._mid_down_y
+
+				self.panXY(delta_x, delta_y)
+
+			self._mid_down_x = x
+			self._mid_down_y = y
+
+	def midUpDetected(self, x, y):
+		self._mid_down_x = None
+		self._mid_down_y = None
+
+		self._mid_up_x = x
+		self._mid_up_y = y
+
+	def tabDownDetected(self):
+		self._tab_down = True
+		print "Tab giu"
+
+	def tabUpDetected(self):
+		self._tab_down = False
+		print "Tab su"
+
+	def mousePressEvent(self, QMouseEvent):
+		if QMouseEvent.buttons() & 4:
+			self.midDownDetected(QMouseEvent.pos().x(), QMouseEvent.pos().y())
+		elif QMouseEvent.buttons() & 1:
+			xy_model = self.xy_from_screen_to_model(QMouseEvent.pos().x(), QMouseEvent.pos().y())
+
+			self._selected_object = self.scene.get_selected(xy_model[0], xy_model[1])
+			self._left_down_x = xy_model[0]
+			self._left_down_y = xy_model[1]
+
+			self._left_up_x = None
+			self._left_up_y = None
+
+	def translate_selected_object(self, x, y):
+		delta_x = x - self._left_down_x
+		delta_y = y - self._left_down_y
+
+		self._selected_object.translate(delta_x, delta_y)
+
+
+
+	def mouseMoveEvent(self, QMouseEvent):
+		if QMouseEvent.buttons() & 4:
+			self.mouseMoveDetected(QMouseEvent.pos().x(), QMouseEvent.pos().y())
+		elif QMouseEvent.buttons() & 1:
+			xy_model = self.xy_from_screen_to_model(QMouseEvent.pos().x(), QMouseEvent.pos().y())
+
+			if self._selected_object != None:
+				self.translate_selected_object(xy_model[0], xy_model[1])
+				self._left_down_x = xy_model[0]
+				self._left_down_y = xy_model[1]
+				self.refresh()
+
+
+	def mouseReleaseEvent(self, QMouseEvent):
+		if QMouseEvent.buttons() & 4:
+			cursor =QtGui.QCursor()
+			print cursor.pos()
+		elif QMouseEvent.buttons() & 1:
+			self._selected_object = None
+
+
+
+	def wheelEvent(self, QWheelEvent):
+		self.add_zoom(int(QWheelEvent.delta() / 120.0))
 
 
 class Window(QWidget):
@@ -229,36 +342,25 @@ class Window(QWidget):
 		self.mouse_down_y = None
 
 		self.glWidget = glWidget
+	def keyPressEvent(self, QKeyEvent):
+		if QKeyEvent.key() & Key_Tab:
+			# Intercetto la pressione del Tab, evitando di ri-processarlo
+			# durante una pressione continua
+			if not QKeyEvent.isAutoRepeat():
+				print "Tab giu"
+				self.glWidget.tabDownDetected()
 
-	def mousePressEvent(self, QMouseEvent):
-		if QMouseEvent.buttons() & 4:
-			self.mouse_down_x = QMouseEvent.pos().x()
-			self.mouse_down_y = QMouseEvent.pos().y()
-		elif QMouseEvent.buttons() & 1:
-			r = self.glWidget.e.get_selected(QMouseEvent.pos().x(), QMouseEvent.pos().y())
-			if r != None:
-				print "Noooo! x: %d, y: %d"%(QMouseEvent.pos().x(), QMouseEvent.pos().y())
-			else:
-				print "Yeppa!"
+	def keyReleaseEvent(self, QKeyEvent):
+		if QKeyEvent.key() & Key_Tab:
+			# Intercetto il rilascio del Tab, evitando di ri-processarlo
+			# durante una pressione continua
+			if not QKeyEvent.isAutoRepeat():
+				print "Tab su"
+				self.glWidget.tabUpDetected()
 
-	def mouseMoveEvent(self, QMouseEvent):
-		if QMouseEvent.buttons() & 4:
-			delta_x = QMouseEvent.pos().x() - self.mouse_down_x
-			delta_y = QMouseEvent.pos().y() - self.mouse_down_y
-			print "Delta X: %d, Delta Y: %d"%(delta_x, delta_y)
-			self.glWidget.panX(delta_x)
-			self.glWidget.panY(delta_y)
 
-			self.mouse_down_x = QMouseEvent.pos().x()
-			self.mouse_down_y = QMouseEvent.pos().y()
 
-			self.glWidget.initializeGL()
 
-			self.glWidget.updateGL()
-	def mouseReleaseEvent(self, QMouseEvent):
-		if QMouseEvent.buttons() & 4:
-			cursor =QtGui.QCursor()
-			print cursor.pos()
 
 
 app = QtGui.QApplication(sys.argv)
