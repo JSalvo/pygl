@@ -18,8 +18,10 @@ from PyQt4 import Qt
 from entity import Entity
 from scene import Scene
 from attribute import Attribute
+from bezier import Bezier
 
 from quadrilaterals import JCircle
+from anchor import Anchor
 
 Key_Tab = int("0x01000001", 16)
 
@@ -46,6 +48,8 @@ class GLWidget(QGLWidget):
 
 		self.scene = Scene()
 
+
+
 		customer = Entity("Customer")
 		self.scene.add_entity(customer)
 
@@ -55,6 +59,12 @@ class GLWidget(QGLWidget):
 
 		age = Attribute("Age")
 		order.add_attribute(age)
+
+		anchor = Anchor()
+		anchor.anchor_to_rectangle(customer)
+
+		bezier = Bezier()
+		self.scene.add_entity(bezier)
 
 		self._mid_down_x = None
 		self._mid_down_y = None

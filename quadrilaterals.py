@@ -21,11 +21,24 @@ def paint_circle(x=0, y=0, radius=1, detail=12):
 	glEnd()
 
 
-class JPoint:
+class JPoint2d:
 	def __init__(self, x, y):
-		self.x = x
-		self.y = y
-
+		self._x = x
+		self._y = y
+	def getX(self):
+		return self._x
+	def getY(self):
+		return self._y
+	def setX(self, x):
+		self._x = x
+	def setY(self, y):
+		self._y = y
+	def __sub__(self, p2):
+		return JPoint2d(p2.getX() - self.getX(), p2.getY() - self.getY())
+	def __add__(self, p2):
+		return JPoint2d(p2.getX() + self.getX(), p2.getY() + self.getY())
+	def __div__(self, v):
+		return JPoint2d(self.getX() / v, self.getY() / 2)
 
 class JRectangle:
 	def __init__(self, width=0, height=0):
@@ -34,6 +47,28 @@ class JRectangle:
 		self._width = width
 		self._height = height
 		self._drawable = True
+		self._anchors = []
+
+	def getLimits(self):
+		result = {}
+		result["left"] = 0
+		result["right"] = self._width
+		result["bottom"] = 0
+		result["top"] = self._height
+		return result
+
+	def get_selected(self, x, y):
+		result = None
+		for anchor in self._anchors:
+			 result = anchor.get_selected(x-self._tx, y-self._ty)
+			 if result != None:
+				 print "Ancora!!!"
+				 break
+		return result
+
+
+	def addAnchor(self, a):
+		self._anchors.append(a)
 
 	def set_drawable(self, drawable):
 		self._drawable = drawable
@@ -101,10 +136,13 @@ class JCircle:
 	def setRadius(self, r):
 		self._radius = r
 
+	def getCenter(self):
+		return JPoint2d(self._tx, self._ty)
+
 	def translate(self, tx, ty):
 		# Traslo l'entita' rispetto alla sua origine *
 		self._tx += tx
-		self._ty += ty	
+		self._ty += ty
 
 	def paint(self):
 		if self._drawable:

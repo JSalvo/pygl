@@ -33,10 +33,13 @@ class Entity(JRectangle):
 		self.setHeight( 119.05 + 120 )
 
 	def get_selected(self, x, y):
-		# Se il punto x, y e' contenuto nel rettangolo che descrive l'entita',
-		# produce questo oggetto, altrimenti ...
 
-		result = None
+
+		result = JRectangle.get_selected(self, x, y)
+
+		if result != None:
+			return result
+
 		for attribute in self._attributes:
 			result = attribute.get_selected(x - self._tx, y - self._ty)
 			if result != None:
@@ -65,6 +68,9 @@ class Entity(JRectangle):
 		self._name.paint()
 		for attribute in self._attributes:
 			attribute.paint()
+
+		for anchor in self._anchors:
+			anchor.paint()
 		glPopMatrix()
 
 # * "L'origine dell'entita' e' l'angolo basso sinistro del rettangolo che la rappresenta "
