@@ -14,6 +14,11 @@ from OpenGL import GLUT
 import math
 from PyQt4 import Qt
 
+
+from entity import Entity
+from scene import Scene
+from attribute import Attribute
+
 Key_Tab = int("0x01000001", 16)
 
 
@@ -28,116 +33,6 @@ def paint_circle(x=0, y=0, radius=1, detail=12):
 	glEnd()
 
 
-class Text:
-	# x e y sono la posizione relativa del testo
-	def __init__(self, text=[], x=0, y=0):
-		self.__text = text
-		self.__x = x
-		self.__y = y
-
-	def set_position(self, x, y):
-		self.__x = x
-		self.__y = y
-
-	def set_text(self, text):
-		self.__text = text
-
-	def get_text(self):
-		return self.__text
-
-	def paint(self):
-		glMatrixMode(GL_MODELVIEW)
-		glPushMatrix()
-		glTranslatef(self.__x, self.__y, 0)
-
-		for i in range(0, len(self.__text)):
-			GLUT.glutStrokeCharacter(GLUT.GLUT_STROKE_MONO_ROMAN, ord(self.__text[i]))
-
-		glPopMatrix()
-
-	def __len__(self):
-		return len(self.__text)
-
-
-class Entity:
-	def __init__(self, name):
-		self._name = Text(name, 30, 60)
-		self._tx = 0
-		self._ty = 0
-		self._width = len(self._name)*104.76 + 60
-		self._height = 119.05 + 120
-
-	def get_name(self):
-		return self._name.get_text()
-
-	def set_name(self, newName):
-		self._name.set_text(newName)
-		self._width = len(self._name)*104.76 + 60
-		self._height = 119.05 + 120
-
-	def translate(self, tx, ty):
-		self._tx += tx
-		self._ty += ty
-
-	def get_selected(self, x, y):
-		if ((x >= self._tx) and (x <= self._tx + self._width) and (y >= self._ty) and (y <= self._ty + self._height)):
-			return self
-		else:
-			return None
-
-	def getWidth(self):
-		return self._width
-
-	def getHeight(self):
-		return self._height
-
-	def paint(self):
-		glMatrixMode(GL_MODELVIEW)
-		glPushMatrix()
-		glTranslatef(self._tx, self._ty, 0)
-		glBegin(GL_LINE_LOOP)
-		glVertex2f(0, 0)
-		glVertex2f(self._width, 0)
-		glVertex2f(self._width, self._height)
-		glVertex2f(0, self._height)
-		glEnd()
-
-		self._name.paint()
-		glPopMatrix()
-
-
-class Scene:
-	def __init__(self):
-		self.entities = []
-	def add_entity(self, entity):
-		self.entities.append(entity)
-	def get_selected(self, x, y):
-		selected = None
-		for e in self.entities:
-			selected = e.get_selected(x, y)
-			if selected != None:
-				break
-		return selected
-	def paint(self):
-		for entity in self.entities:
-			entity.paint()
-
-
-class Attribute:
-	def __init__(self, name, x=0, y=0):
-		self.__label = Text(name, 20, 0)
-		self.__x = x
-		self.__y = y
-
-	def get_name(self):
-		return self.__label.get_text()
-
-	def set_name(self, name):
-		self.__label.set_text(name)
-
-	#def paint(self):
-
-
 class GLWidget(QGLWidget):
 
 	def __init__(self, parent):
@@ -146,9 +41,14 @@ class GLWidget(QGLWidget):
 		self._zoom_factor = 1.0
 		self._pan_x = 0
 		self._pan_y = 0
-		self.e = Entity("Cliente")
+
 		self.scene = Scene()
-		self.scene.add_entity(self.e)
+
+		customer = Entity("Customer")
+		self.scene.add_entity(customer)
+
+		order = Entity("Order")
+		self.scene.add_entity(order)
 
 		self._mid_down_x = None
 		self._mid_down_y = None
@@ -209,7 +109,12 @@ class GLWidget(QGLWidget):
 		glViewport(0, 0, self.width(), self.height())
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
-		glOrtho(0.0 - self._pan_x * self._zoom_factor, self.width()*self._zoom_factor - self._pan_x * self._zoom_factor , 0.0 + self._pan_y * self._zoom_factor, self.height()*self._zoom_factor + self._pan_y * self._zoom_factor, -1.0, 1.0)
+
+		glOrtho(0.0, self.width(), 0.0, self.height(), -1.0, 1.0)
+		glTranslatef(self.width()/2.0, +self.height()/2.0, 0)
+		glScalef(1.0 / self._zoom_factor, 1.0 / self._zoom_factor, 1)
+		glTranslatef(-self.width()/2.0 , -self.height()/2.0, 0)
+
 
 	def paintGL(self):
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -225,7 +130,12 @@ class GLWidget(QGLWidget):
 		glViewport(0, 0, self.width(), self.height())
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
-		glOrtho(0.0 - self._pan_x * self._zoom_factor, self.width()*self._zoom_factor - self._pan_x * self._zoom_factor, 0.0 + self._pan_y * self._zoom_factor, self.height()*self._zoom_factor + self._pan_y * self._zoom_factor, -1.0, 1.0)
+
+		glOrtho(0.0, self.width(), 0.0, self.height(), -1.0, 1.0)
+		glTranslatef(self.width()/2.0, +self.height()/2.0, 0)
+		glScalef(1.0 / self._zoom_factor, 1.0 / self._zoom_factor, 1)
+		glTranslatef(-self.width()/2.0 , -self.height()/2.0, 0)
+
 
 	def midDownDetected(self, x, y):
 		self._mid_down_x = x
@@ -239,7 +149,7 @@ class GLWidget(QGLWidget):
 	# Converte le coordinate "schermo" x, y in coordinate "modello"
 	def xy_from_screen_to_model(self, x, y):
 		y = self.height() - y
-		return ((x - self._pan_x)* self._zoom_factor, (y + self._pan_y) * self._zoom_factor)
+		return (((x - self.width() / 2.0) * self._zoom_factor) + (self.width() / 2.0), ((y -self.height() / 2.0) * self._zoom_factor) + (self.height() / 2.0))
 
 
 	def mouseMoveDetected(self, x, y):
@@ -251,6 +161,7 @@ class GLWidget(QGLWidget):
 				delta_y = y - self._mid_down_y
 
 				self.panXY(delta_x, delta_y)
+				self.scene.pan((1.0 * delta_x) * self._zoom_factor, -(1.0 * delta_y)  * self._zoom_factor)
 
 			self._mid_down_x = x
 			self._mid_down_y = y
