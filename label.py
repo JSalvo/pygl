@@ -11,36 +11,32 @@ from PyQt4 import Qt
 from text import Text
 from quadrilaterals import JRectangle
 
-class Entity(JRectangle):
-	def __init__(self, name):
+class Label(JRectangle):
+	def __init__(self, text):
 		JRectangle.__init__(self)
-		self._name = Text(name, 30, 60)
+		self._text = Text(text, 0, 10)
 
-		self.setWidth( len(self._name)*104.76 + 60 )
-		self.setHeight( 119.05 + 120 )
-		self._attributes = []
+		self.setWidth( len(self._text)*104.76)
+		self.setHeight( 119.05 + 20 )
+		self.set_drawable(False)
 
-	def get_name(self):
-		return self._name.get_text()
+	def get_text(self):
+		return self._text.get_text()
 
 	# Imposto il nome dell'entita'
-	def set_name(self, newName):
-		self._name.set_text(newName)
+	def set_text(self, newText):
+		self._text.set_text(newText)
 
 		# Larghezza e altezza del rettangolo rappresentate l'entita', dipendono
 		# dal nome dell'entita' stessa
-		self.setWidth( len(self._name)*104.76 + 60 )
-		self.setHeight( 119.05 + 120 )
+		self.setWidth( len(self._name)*104.76 )
+		self.setHeight( 119.05 + 20 )
 
 	def get_selected(self, x, y):
 		# Se il punto x, y e' contenuto nel rettangolo che descrive l'entita',
 		# produce questo oggetto, altrimenti ...
 
 		result = None
-		for attribute in self._attributes:
-			result = attribute.get_selected(x - self._tx, y - self._ty)
-			if result != None:
-				break
 
 		if result != None:
 			return result
@@ -49,9 +45,6 @@ class Entity(JRectangle):
 
 		return result
 
-
-	def add_attribute(self, attribute):
-		self._attributes.append(attribute)
 
 	def paint(self):
 		JRectangle.paint(self)
@@ -62,9 +55,7 @@ class Entity(JRectangle):
 		# La posizine dell'entita' viene resa, attraverso una traslazione
 		# relativamente alla sua origine*
 		glTranslatef(self._tx, self._ty, 0)
-		self._name.paint()
-		for attribute in self._attributes:
-			attribute.paint()
+		self._text.paint()
 		glPopMatrix()
 
 # * "L'origine dell'entita' e' l'angolo basso sinistro del rettangolo che la rappresenta "

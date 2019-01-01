@@ -19,6 +19,8 @@ from entity import Entity
 from scene import Scene
 from attribute import Attribute
 
+from quadrilaterals import JCircle
+
 Key_Tab = int("0x01000001", 16)
 
 
@@ -48,7 +50,11 @@ class GLWidget(QGLWidget):
 		self.scene.add_entity(customer)
 
 		order = Entity("Order")
+		order.set_drawable(True)
 		self.scene.add_entity(order)
+
+		age = Attribute("Age")
+		order.add_attribute(age)
 
 		self._mid_down_x = None
 		self._mid_down_y = None
