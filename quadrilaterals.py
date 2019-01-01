@@ -38,7 +38,9 @@ class JPoint2d:
 	def __add__(self, p2):
 		return JPoint2d(p2.getX() + self.getX(), p2.getY() + self.getY())
 	def __div__(self, v):
-		return JPoint2d(self.getX() / v, self.getY() / 2)
+		return JPoint2d(self.getX() / v, self.getY() / v)
+	def __mul__(self, v):
+		return JPoint2d(self.getX() * v, self.getY() * v)
 
 class JRectangle:
 	def __init__(self, width=0, height=0):
