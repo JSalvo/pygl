@@ -20,11 +20,13 @@ from scene import Scene
 from attribute import Attribute
 from bezier import Bezier
 
-from quadrilaterals import JCircle
+from quadrilaterals import JCircle, Link
 from anchor import Anchor
+from automata import AutomataState, AutomataArc
 
 Key_Tab = int("0x01000001", 16)
-
+Key_Shift = int("0x01000020", 16)
+Key_Control = int("0x01000021", 16)
 
 def paint_circle(x=0, y=0, radius=1, detail=12):
 	delta = (2*math.pi) / detail
@@ -48,7 +50,7 @@ class GLWidget(QGLWidget):
 
 		self.scene = Scene()
 
-
+		self._drawHidden = False
 
 		customer = Entity("Customer")
 		self.scene.add_entity(customer)
@@ -58,13 +60,32 @@ class GLWidget(QGLWidget):
 		self.scene.add_entity(order)
 
 		age = Attribute("Age")
+		age.setPrimaryKey(True)
 		order.add_attribute(age)
 
 		anchor = Anchor()
-		anchor.anchor_to_rectangle(customer)
+		anchor.anchor_to_rectangle(order)
 
 		bezier = Bezier()
-		self.scene.add_entity(bezier)
+		#self.scene.add_entity(bezier)
+
+		link1 = Link(anchor, age)
+		order.addLink(link1)
+
+		s0 = AutomataState("S0")
+		s1 = AutomataState("S1")
+		arc = AutomataArc(s0, s1)
+		arc2 = AutomataArc(s0, s0)
+		arc3 = AutomataArc(s1, s1)
+
+		self.scene.add_entity(arc)
+		self.scene.add_entity(arc2)
+		self.scene.add_entity(arc3)
+		self.scene.add_entity(s0)
+		self.scene.add_entity(s1)
+
+
+
 
 		self._mid_down_x = None
 		self._mid_down_y = None
@@ -91,6 +112,16 @@ class GLWidget(QGLWidget):
 		self._pan_y += pan_y
 		self.refresh()
 
+	def setHiddenVisibility(self, drawHidden):
+		self._drawHidden = drawHidden
+		self.refresh()
+
+	def setHiddenVisibilitySwitch(self):
+		if self._drawHidden:
+			self._drawHidden = False
+		else:
+			self._drawHidden = True
+		self.refresh()
 
 	def panX(self, pan_x):
 		self._pan_x += pan_x
@@ -118,9 +149,11 @@ class GLWidget(QGLWidget):
 		GLUT.glutInit([], [])
 
 		black = QColor(0,0,0)
+		white = QColor(255,255,255)
 
 		# Imposto colore di cancellazione
 		self.qglClearColor(black)
+
 
 		glViewport(0, 0, self.width(), self.height())
 		glMatrixMode(GL_PROJECTION)
@@ -134,9 +167,15 @@ class GLWidget(QGLWidget):
 
 	def paintGL(self):
 		glClear(GL_COLOR_BUFFER_BIT);
-		glColor3f(1.0, 1.0, 0.0)
+		glColor3f(1, 1, 1)
 
-		self.scene.paint()
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+		glEnable(GL_BLEND)
+		glEnable(GL_LINE_SMOOTH)
+		glLineWidth(2.0)
+
+		self.scene.paint(self._drawHidden)
 
 		#paint_circle(30, 30, 20, 12)
 
@@ -270,20 +309,25 @@ class Window(QWidget):
 
 		self.glWidget = glWidget
 	def keyPressEvent(self, QKeyEvent):
-		if QKeyEvent.key() & Key_Tab:
-			# Intercetto la pressione del Tab, evitando di ri-processarlo
+		if QKeyEvent.key() == Key_Control:
+			# Intercetto la pressione del Ctrl, evitando di ri-processarlo
 			# durante una pressione continua
 			if not QKeyEvent.isAutoRepeat():
 				print "Tab giu"
 				self.glWidget.tabDownDetected()
-
+		elif QKeyEvent.key() == Key_Tab:
+			if not QKeyEvent.isAutoRepeat():
+				self.glWidget.setHiddenVisibilitySwitch()
 	def keyReleaseEvent(self, QKeyEvent):
-		if QKeyEvent.key() & Key_Tab:
+		if QKeyEvent.key() == Key_Control:
 			# Intercetto il rilascio del Tab, evitando di ri-processarlo
 			# durante una pressione continua
 			if not QKeyEvent.isAutoRepeat():
 				print "Tab su"
 				self.glWidget.tabUpDetected()
+		elif QKeyEvent.key() == Key_Tab:
+			if not QKeyEvent.isAutoRepeat():
+				pass
 
 
 

@@ -9,13 +9,16 @@ import math
 from PyQt4 import Qt
 
 from label import Label
-from quadrilaterals import JCircle
+from quadrilaterals import JCircle, Text
 
 
 Anchor_to_rectangle = 1
 
+# Non potendo confrontare con sicurezza due numeri a virgola mobile, utilizzo
+# questa funzione.Considerero' due numeri in virgola mobile uguali se differiscono
+# meno di 0.00001
 def near_to(a, b):
-	if (abs(a - b) < 0.001):
+	if (abs(a - b) < 0.00001):
 		return True
 	else:
 		return False
@@ -25,15 +28,18 @@ def near_to(a, b):
 class Anchor(JCircle):
 	def __init__(self):
 		JCircle.__init__(self, 20)
+		self.setVisibility(False)
 		self._Anchor_type = 0
 		self._attached_to = None
+
+		self.setColor(QColor(150, 150, 150))
 
 
 	def get_selected(self, x, y):
 		result = None
-
-		if self.isSelected(x, y):
-			result = self
+		if self._visible or True:
+			if self.isSelected(x, y):
+				result = self
 
 		return result
 
@@ -99,11 +105,13 @@ class Anchor(JCircle):
 				elif new_tx > rlimits["right"]:
 					new_tx = rlimits["right"]
 			else:
-				1 / 0
+				1 / 0 # Se arrivo qui c'e' qualcosa che non va
 
 
 			self._tx = new_tx
 			self._ty = new_ty
 
-	def paint(self):
-		JCircle.paint(self)
+	def paint(self, paintHidden=False):
+		self.setOpenGlColor()
+		if self.getVisibility() or paintHidden:
+			JCircle.paint(self, paintHidden)

@@ -26,10 +26,10 @@ class Scene:
 	def pan(self, x, y):
 		self._pan_x += x
 		self._pan_y += y
-	def paint(self):
+	def paint(self, drawHidden=False):
 		glMatrixMode(GL_MODELVIEW)
 		glPushMatrix()
 		glTranslatef(self._pan_x, self._pan_y, 0)
 		for entity in self.entities:
-			entity.paint()
+			entity.paint(drawHidden)
 		glPopMatrix()

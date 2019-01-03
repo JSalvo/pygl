@@ -8,8 +8,8 @@ from OpenGL import GLUT
 import math
 from PyQt4 import Qt
 
-from text import Text
-from quadrilaterals import JRectangle
+#from text import Text
+from quadrilaterals import JRectangle, Text
 
 class Label(JRectangle):
 	def __init__(self, text):
@@ -38,24 +38,27 @@ class Label(JRectangle):
 
 		result = None
 
-		if result != None:
-			return result
-		elif self.isSelected(x, y):
-			return self
+		if self._visible or True:
+			if result != None:
+				return result
+			elif self.isSelected(x, y):
+				return self
 
 		return result
 
 
-	def paint(self):
-		JRectangle.paint(self)
+	def paint(self, paintHidden=False):
+		#self.setOpenGlColor()
+		if self.getVisibility() or paintHidden:
+			JRectangle.paint(self)
 
-		glMatrixMode(GL_MODELVIEW)
+			glMatrixMode(GL_MODELVIEW)
 
-		glPushMatrix()
-		# La posizine dell'entita' viene resa, attraverso una traslazione
-		# relativamente alla sua origine*
-		glTranslatef(self._tx, self._ty, 0)
-		self._text.paint()
-		glPopMatrix()
+			glPushMatrix()
+			# La posizine dell'entita' viene resa, attraverso una traslazione
+			# relativamente alla sua origine*
+			glTranslatef(self._tx, self._ty, 0)
+			self._text.paint()
+			glPopMatrix()
 
 # * "L'origine dell'entita' e' l'angolo basso sinistro del rettangolo che la rappresenta "
