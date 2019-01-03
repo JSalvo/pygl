@@ -17,6 +17,7 @@ class AutomataState(JCircle):
 	def __init__(self, name):
 		JCircle.__init__(self, 200)
 		self._label = Label(name)
+		self._label.translate(-self._label.getWidth()/2.0, -self._label.getHeight()/2.0)
 		self._links_to = []
 
 	def get_name(self):
@@ -43,7 +44,7 @@ class AutomataState(JCircle):
 			JCircle.paint(self)
 			glPushMatrix()
 			glTranslatef(self._tx, self._ty, 0)
-			#self._label.paint()
+			self._label.paint()
 			glPopMatrix()
 
 class AutomataArc(Bezier):
