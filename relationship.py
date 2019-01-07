@@ -77,7 +77,9 @@ class Entity(JRectangle):
 			glBegin(GL_LINES)
 			for link in self._links:
 				link.getAnchorGlPoint()
+				print "a"
 				link.getAttributeGlPoint()
+				print "a"
 			glEnd()
 
 			for attribute in self._attributes:

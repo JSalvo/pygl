@@ -19,9 +19,20 @@ class AutomataState(JCircle):
 		self._label = Label(name)
 		self._label.translate(-self._label.getWidth()/2.0, -self._label.getHeight()/2.0)
 		self._links_to = []
+		self._arcs = []
 
 	def get_name(self):
 		return self._label.get_text()
+
+	def add_arc(self, a):
+		self._arcs.append(a)
+
+	def translate(self, tx, ty, lock_control_points=False):
+		JCircle.translate(self, tx, ty)
+
+		if not lock_control_points:
+			for arc in self._links_to:
+				arc.translate_2central_points(tx, ty)
 
 	def set_name(self, name):
 		self._label.set_text(name)
@@ -52,7 +63,7 @@ class AutomataArc(Bezier):
 		Bezier.__init__(self)
 		self._control_points[0] = s1
 		self._control_points[3] = s2
-
+		s1.add_link_to(self)
 
 	def check(self, t, d):
 		p = p1*(1-t)**3 + p2*3*t*(1-t)**2 + p3*3*t**2*(1-t) + p4*t**3

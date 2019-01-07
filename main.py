@@ -253,9 +253,10 @@ class GLWidget(QGLWidget):
 		delta_x = x - self._left_down_x
 		delta_y = y - self._left_down_y
 
-		self._selected_object.translate(delta_x, delta_y)
-
-
+		if self._drawHidden:
+			self._selected_object.translate(delta_x, delta_y, True)
+		else:
+			self._selected_object.translate(delta_x, delta_y, False)
 
 	def mouseMoveEvent(self, QMouseEvent):
 		if QMouseEvent.buttons() & 4:

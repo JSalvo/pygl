@@ -140,6 +140,36 @@ class JPoint2d(JObject):
 	def __mul__(self, v):
 		return JPoint2d(self.getX() * v, self.getY() * v)
 
+class JRhombus(JObject):
+	def __init__(self, major_diagonal, minor_diagonal):
+		JObject.__init__(self)
+		self._major_diagonal = major_diagonal
+		self._minor_diagonal = minor_diagonal
+		self._anchors = []
+		self._tx = 0
+		self._ty = 0
+
+	def getMajorDiagonal(self):
+		return self._major_diagonal
+
+	def getMinorDiagonal(self):
+		return self._minor_diagonal
+
+	def setMajorDiagonal(self, major_diagonal):
+		self._major_diagonal = major_diagonal
+
+	def setMinorDiagonal(self, minor_diagonal):
+		self._minor_diagonal = minor_diagonal
+
+	def translate(self, tx, ty, lock_control_points=False):
+		# Traslo l'entita' rispetto alla sua origine *
+		self._tx += tx
+		self._ty += ty
+	def isSelected(self, x, y):
+		pass
+
+
+
 class JRectangle(JObject):
 	def __init__(self, width=0, height=0):
 		JObject.__init__(self)
@@ -149,6 +179,8 @@ class JRectangle(JObject):
 		self._height = height
 		self._drawable = True
 		self._anchors = []
+
+
 
 	def getLimits(self):
 		result = {}
@@ -164,7 +196,6 @@ class JRectangle(JObject):
 			for anchor in self._anchors:
 				 result = anchor.get_selected(x-self._tx, y-self._ty)
 				 if result != None:
-					 print "Ancora!!!"
 					 break
 		return result
 
@@ -219,7 +250,7 @@ class JRectangle(JObject):
 
 				glPopMatrix()
 
-	def translate(self, tx, ty):
+	def translate(self, tx, ty, lock_control=False):
 		# Traslo l'entita' rispetto alla sua origine *
 		self._tx += tx
 		self._ty += ty
@@ -256,7 +287,7 @@ class JCircle(JObject):
 	def getCenter(self):
 		return JPoint2d(self._tx, self._ty)
 
-	def translate(self, tx, ty):
+	def translate(self, tx, ty, lock_control=False):
 		# Traslo l'entita' rispetto alla sua origine *
 		self._tx += tx
 		self._ty += ty

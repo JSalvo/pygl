@@ -41,6 +41,11 @@ class Bezier(JObject):
 		self._control_points.append(p3)
 		self._control_points.append(p4)
 
+	# Trasla solo i due punti di controllo centrali
+	def translate_2central_points(self, tx, ty):
+		self._control_points[1].translate(tx, ty)
+		self._control_points[2].translate(tx, ty)
+
 
 	def get_selected(self, x, y):
 		result = None

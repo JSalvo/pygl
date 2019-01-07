@@ -52,7 +52,7 @@ class Anchor(JCircle):
 		rectangle.addAnchor(self)
 
 	# Override
-	def translate(self, tx, ty):
+	def translate(self, tx, ty, lock_control=False):
 		if self._Anchor_type == Anchor_to_rectangle:
 			rectangle = self._attached_to
 			rlimits = rectangle.getLimits()
