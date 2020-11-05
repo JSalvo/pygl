@@ -1,0 +1,3 @@
+sudo apt-get install python-qt4-gl
+sudo apt-get install python-opengl
+sudo apt-get install libcanberra-gtk-module
